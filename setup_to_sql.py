@@ -1,6 +1,7 @@
 # from add_setup import user_input
 from datetime import datetime
 import sqlite3
+from sqlite_database import get_highest_setup_id_from_game_setups
 
 conn = sqlite3.connect('sqlite_database.db')
 c = conn.cursor()
@@ -23,28 +24,29 @@ setup_details = {
 
 
 def setup_to_sql(setup_details):
+    highest_setup_id = get_highest_setup_id_from_game_setups()
     json_setup = setup_details["setup"]
-    game_setup_to_sql(json_setup)
+    game_setup_to_sql(json_setup, highest_setup_id)
 
-    game_record_to_sql(setup_details)
+    game_record_to_sql(setup_details, highest_setup_id)
 
 
-def game_setup_to_sql(json_setup):
+def game_setup_to_sql(json_setup, highest_setup_id):
     for row, values in json_setup.items():
         # print(f"{row} + {values}")
         for index, value in enumerate(values):
             # print(f"(1, {row}, {index+1}, {str(value)}),")
             c.execute(
                 "INSERT INTO GameSetups (setup_id, row, col, piece) VALUES (?, ?, ?, ?)",
-                (1, int(row), index + 1, str(value))
+                (highest_setup_id + 1, int(row), index + 1, str(value))
             )
     conn.commit()
 
 
-def game_record_to_sql(setup_details):
+def game_record_to_sql(setup_details, highest_setup_id):
     c.execute(
         "INSERT INTO GameRecords (setup_id, date_played, opponent_name, result, moves, flipped_setup, noob_killer) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (1,
+        (highest_setup_id + 1,
          setup_details["date_played"],
          setup_details["opponent_name"],
          setup_details["result"],
