@@ -10,20 +10,10 @@ def user_input():
     print("Opponent name:")
     opponent_name_input = input()
 
-    opponent_tuple = check_for_opponent(opponent_name_input)
-    opponent_found_status = opponent_tuple[0]
-    opponent_details = opponent_tuple[1]
+    opponent_details = check_for_opponent(opponent_name_input)
 
-    if opponent_found_status:
-        opponent_id = opponent_details[0]
-        opponent_name = opponent_details[1]
-    else:
-        raise Exception("Username not found.")
-
-    print(f"opponent_found_status: {opponent_found_status}")
-    print(f"opponent_details: {opponent_details}")
-    print(f"opponent_id: {opponent_id}")
-    print(f"opponent_name: {opponent_name}")
+    opponent_id = opponent_details[0]
+    opponent_name = opponent_details[1]
 
     print("Result (win/draw/loss):")
     result = input()
