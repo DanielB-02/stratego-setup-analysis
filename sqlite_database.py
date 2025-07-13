@@ -212,8 +212,23 @@ def get_highest_setup_id_from_game_setups():
     return result
 
 
+def select_opponent_id_and_name(opponent):
+    conn = sqlite3.connect('sqlite_database.db')
+    c = conn.cursor()
+
+    c.execute("""SELECT opponent_id, opponent_name FROM Opponents WHERE opponent_name = ?""", (opponent,))
+    result = c.fetchone()
+
+    conn.commit()
+    conn.close()
+
+    return result
+
+
 # highest_setup_id = get_highest_setup_id_from_game_setups()
 # print(highest_setup_id)
+
+# print(select_opponent_id_and_name("sevenseas"))
 
 conn.commit()
 conn.close()
