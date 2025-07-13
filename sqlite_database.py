@@ -225,10 +225,36 @@ def select_opponent_id_and_name(opponent):
     return result
 
 
-# highest_setup_id = get_highest_setup_id_from_game_setups()
-# print(highest_setup_id)
+def select_everything_from_staging_setup(setup_id):
+    conn = sqlite3.connect('sqlite_database.db')
+    c = conn.cursor()
 
-# print(select_opponent_id_and_name("sevenseas"))
+    c.execute("""SELECT * FROM StagingGameSetups WHERE setup_id = ?""", (setup_id,))
+    result = c.fetchall()
+
+    conn.commit()
+    conn.close()
+
+    return result
+
+
+def select_pieces_from_staging_setup(setup_id):
+    conn = sqlite3.connect('sqlite_database.db')
+    c = conn.cursor()
+
+    c.execute("""SELECT piece FROM StagingGameSetups WHERE setup_id = ?""", (setup_id,))
+    result = [row[0] for row in c.fetchall()]
+
+    conn.commit()
+    conn.close()
+
+    return result
+
+
+# print(get_all_setup_positions())
+
+# pieces = select_everything_from_staging_setup(1)
+# print(pieces)
 
 conn.commit()
 conn.close()

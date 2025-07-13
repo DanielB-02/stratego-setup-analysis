@@ -31,6 +31,8 @@ def user_input():
 
     user_input_dict = create_dictionary(date_played, opponent_id, opponent_name, result, moves, noob_killer, transcribed_setup)
 
+
+
     return user_input_dict
 
 

@@ -1,7 +1,9 @@
 from add_setup import user_input
 from datetime import datetime
 import sqlite3
-from sqlite_database import get_highest_setup_id_from_game_setups
+from sqlite_database import get_highest_setup_id_from_game_setups, select_everything_from_staging_setup, select_pieces_from_staging_setup
+from check_piece_consistency import check_piece_cosistency
+
 
 conn = sqlite3.connect('sqlite_database.db')
 c = conn.cursor()
@@ -27,21 +29,37 @@ def setup_to_sql(setup_details):
     print(setup_details)
     highest_setup_id = get_highest_setup_id_from_game_setups()
     json_setup = setup_details["setup"]
-    game_setup_to_sql(json_setup, highest_setup_id)
+    game_setup_to_sql_staging(json_setup, highest_setup_id)
 
     game_record_to_sql(setup_details, highest_setup_id)
 
 
-def game_setup_to_sql(json_setup, highest_setup_id):
+def game_setup_to_sql_staging(json_setup, highest_setup_id):
     for row, values in json_setup.items():
-        # print(f"{row} + {values}")
         for index, value in enumerate(values):
-            # print(f"(1, {row}, {index+1}, {str(value)}),")
+            c.execute(
+                "INSERT INTO StagingGameSetups (setup_id, row, col, piece) VALUES (?, ?, ?, ?)",
+                (highest_setup_id + 1, int(row), index + 1, str(value))
+            )
+    conn.commit()
+
+    check_consistency(highest_setup_id + 1)
+    game_setup_to_sql_real(json_setup, highest_setup_id)
+
+
+def game_setup_to_sql_real(json_setup, highest_setup_id):
+    for row, values in json_setup.items():
+        for index, value in enumerate(values):
             c.execute(
                 "INSERT INTO GameSetups (setup_id, row, col, piece) VALUES (?, ?, ?, ?)",
                 (highest_setup_id + 1, int(row), index + 1, str(value))
             )
     conn.commit()
+
+
+def check_consistency(highest_setup_id):
+    pieces = select_pieces_from_staging_setup(highest_setup_id)
+    check_piece_cosistency(pieces)
 
 
 def game_record_to_sql(setup_details, highest_setup_id):
