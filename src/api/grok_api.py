@@ -8,6 +8,13 @@ from src.parsing.parse_setup import string_to_json
 load_dotenv()
 XAI_API_KEY = os.getenv("XAI_API_KEY")
 
+# If not found, try loading from project root
+if not XAI_API_KEY:
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    env_path = os.path.join(project_root, '.env')
+    load_dotenv(env_path)
+    XAI_API_KEY = os.getenv("XAI_API_KEY")
+
 
 # Function to encode image to base64
 def encode_image(image_path):

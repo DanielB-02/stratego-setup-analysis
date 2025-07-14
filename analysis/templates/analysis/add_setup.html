@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Setup - Stratego Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .drag-drop-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background-color: #fafafa;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+        
+        .drag-drop-area.dragover {
+            border-color: #007bff;
+            background-color: #e3f2fd;
+        }
+        
+        .drag-drop-area p {
+            margin: 0;
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .file-info {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e8f5e8;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            margin-top: 5px;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+            <a href="/" style="margin-right: 20px; text-decoration: none; color: #007bff; font-weight: bold;">Home</a>
+            <a href="/add-setup/" style="text-decoration: none; color: #007bff; font-weight: bold;">Add Setup</a>
+        </div>
+        <h1>Add New Setup</h1>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="success-message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        
+        <form method="post" enctype="multipart/form-data" id="setupForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.date_played.id_for_label }}">Date Played:</label>
+                {{ form.date_played }}
+                {% if form.date_played.errors %}
+                    <div class="error-message">{{ form.date_played.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.opponent_name.id_for_label }}">Opponent Name:</label>
+                {{ form.opponent_name }}
+                {% if form.opponent_name.errors %}
+                    <div class="error-message">{{ form.opponent_name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.result.id_for_label }}">Result:</label>
+                {{ form.result }}
+                {% if form.result.errors %}
+                    <div class="error-message">{{ form.result.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.moves.id_for_label }}">Number of Moves:</label>
+                {{ form.moves }}
+                {% if form.moves.errors %}
+                    <div class="error-message">{{ form.moves.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.noob_killer.id_for_label }}">Noob Killer:</label>
+                {{ form.noob_killer }}
+                {% if form.noob_killer.errors %}
+                    <div class="error-message">{{ form.noob_killer.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label>Setup Image:</label>
+                <div class="drag-drop-area" id="dragDropArea">
+                    <p>Drag and drop an image here or click to select</p>
+                </div>
+                {{ form.setup_image }}
+                <div class="file-info" id="fileInfo"></div>
+                {% if form.setup_image.errors %}
+                    <div class="error-message">{{ form.setup_image.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="btn">Add Setup</button>
+        </form>
+    </div>
+
+    <script>
+        const dragDropArea = document.getElementById('dragDropArea');
+        const fileInput = document.getElementById('{{ form.setup_image.id_for_label }}');
+        const fileInfo = document.getElementById('fileInfo');
+        
+        // Hide the default file input
+        fileInput.style.display = 'none';
+        
+        // Click event for drag drop area
+        dragDropArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // Drag and drop events
+        dragDropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dragDropArea.classList.add('dragover');
+        });
+        
+        dragDropArea.addEventListener('dragleave', () => {
+            dragDropArea.classList.remove('dragover');
+        });
+        
+        dragDropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dragDropArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                updateFileInfo(files[0]);
+            }
+        });
+        
+        // File input change event
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                updateFileInfo(e.target.files[0]);
+            }
+        });
+        
+        function updateFileInfo(file) {
+            if (file.type.startsWith('image/')) {
+                fileInfo.innerHTML = `
+                    <strong>Selected file:</strong> ${file.name}<br>
+                    <strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB<br>
+                    <strong>Type:</strong> ${file.type}
+                `;
+                fileInfo.style.display = 'block';
+                dragDropArea.innerHTML = '<p>Image selected: ' + file.name + '</p>';
+            } else {
+                alert('Please select an image file.');
+                fileInput.value = '';
+            }
+        }
+    </script>
+</body>
+</html>
