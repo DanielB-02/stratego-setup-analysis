@@ -2,7 +2,7 @@ from langchain_xai import ChatXAI
 from dotenv import load_dotenv
 import os
 import base64
-from parse_setup import string_to_json
+from src.parsing.parse_setup import string_to_json
 
 # Load environment variables
 load_dotenv()

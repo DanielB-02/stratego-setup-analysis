@@ -1,4 +1,4 @@
-from sqlite_database import get_pieces_at_position, get_pieces_at_position_for_opponent
+from src.database.sqlite_database import get_pieces_at_position, get_pieces_at_position_for_opponent
 from collections import Counter
 
 print("Give the row number:")

@@ -1,11 +1,11 @@
-from add_setup import user_input
 from datetime import datetime
+from src.parsing.add_setup import user_input
 import sqlite3
-from sqlite_database import determine_new_setup_id_from_game_setups, select_everything_from_staging_setup, select_pieces_from_staging_setup, check_duplicate_setup, delete_from_temp_setup
-from staging_consistency_checks import check_piece_consistency
+from sqlite_database import determine_new_setup_id_from_game_setups, select_pieces_from_staging_setup, check_duplicate_setup, delete_from_temp_setup
+from src.checks.staging_consistency_checks import check_piece_consistency
 
 
-conn = sqlite3.connect('sqlite_database.db')
+conn = sqlite3.connect('../../data/sqlite_database.db')
 c = conn.cursor()
 
 
@@ -17,7 +17,7 @@ setup_details = {
     'moves': 777,
     'noob_killer': 1,
     'setup': {
-        '1': ['6', '2', '6', '8', '4', '2', '5', '2', '2', '5'],
+        '1': ['6', '2', '6', '4', '8', '2', '5', '2', '2', '5'],
         '2': ['3', '5', '2', '9', '7', '5', '2', 'B', '4', '8'],
         '3': ['B', '2', '7', '1', '6', '2', '7', '10', '6', '3'],
         '4': ['B', '4', 'B', '3', 'B', '3', 'B', '4', '3', 'F']
@@ -88,7 +88,6 @@ def game_record_to_sql(setup_details, new_setup_id):
 
 
 # setup_details = user_input()
-# json_setup = setup_details["setup"]
 setup_to_sql(setup_details)
 
 conn.close()

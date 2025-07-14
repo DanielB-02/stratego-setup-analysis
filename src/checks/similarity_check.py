@@ -1,4 +1,4 @@
-from sqlite_database import get_all_setup_positions
+from src.database.sqlite_database import get_all_setup_positions
 
 
 setup_positions = get_all_setup_positions()

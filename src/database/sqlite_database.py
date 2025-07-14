@@ -1,6 +1,6 @@
 import sqlite3
 
-conn = sqlite3.connect('sqlite_database.db')
+conn = sqlite3.connect('../../data/sqlite_database.db')
 c = conn.cursor()
 
 # c.execute("DROP TABLE GameRecords")
@@ -151,7 +151,7 @@ c = conn.cursor()
 
 
 def get_all_setup_positions():
-    conn = sqlite3.connect('sqlite_database.db')
+    conn = sqlite3.connect('../../data/sqlite_database.db')
     c = conn.cursor()
 
     c.execute("SELECT * FROM GameSetups")
@@ -164,7 +164,7 @@ def get_all_setup_positions():
 
 
 def get_pieces_at_position(row, col):
-    conn = sqlite3.connect('sqlite_database.db')
+    conn = sqlite3.connect('../../data/sqlite_database.db')
     c = conn.cursor()
 
     c.execute("SELECT piece FROM GameSetups WHERE row = ? AND col = ?", (row, col))
@@ -177,7 +177,7 @@ def get_pieces_at_position(row, col):
 
 
 def get_pieces_at_position_for_opponent(opponent, row, col):
-    conn = sqlite3.connect('sqlite_database.db')
+    conn = sqlite3.connect('../../data/sqlite_database.db')
     c = conn.cursor()
 
     c.execute("""
@@ -198,7 +198,7 @@ def get_pieces_at_position_for_opponent(opponent, row, col):
 
 
 def determine_new_setup_id_from_game_setups():
-    conn = sqlite3.connect('sqlite_database.db')
+    conn = sqlite3.connect('../../data/sqlite_database.db')
     c = conn.cursor()
 
     c.execute("SELECT MAX(setup_id) FROM GameSetups")
@@ -211,7 +211,7 @@ def determine_new_setup_id_from_game_setups():
 
 
 def select_opponent_id_and_name(opponent):
-    conn = sqlite3.connect('sqlite_database.db')
+    conn = sqlite3.connect('../../data/sqlite_database.db')
     c = conn.cursor()
 
     c.execute("""SELECT opponent_id, opponent_name FROM Opponents WHERE opponent_name = ?""", (opponent,))
@@ -224,7 +224,7 @@ def select_opponent_id_and_name(opponent):
 
 
 def select_everything_from_staging_setup(setup_id):
-    conn = sqlite3.connect('sqlite_database.db')
+    conn = sqlite3.connect('../../data/sqlite_database.db')
     c = conn.cursor()
 
     c.execute("""SELECT * FROM TempSetup WHERE setup_id = ?""", (setup_id,))
@@ -237,7 +237,7 @@ def select_everything_from_staging_setup(setup_id):
 
 
 def select_pieces_from_staging_setup(setup_id):
-    conn = sqlite3.connect('sqlite_database.db')
+    conn = sqlite3.connect('../../data/sqlite_database.db')
     c = conn.cursor()
 
     c.execute("""SELECT piece FROM TempSetup WHERE setup_id = ?""", (setup_id,))
@@ -250,7 +250,7 @@ def select_pieces_from_staging_setup(setup_id):
 
 
 def delete_from_temp_setup():
-    conn = sqlite3.connect('sqlite_database.db')
+    conn = sqlite3.connect('../../data/sqlite_database.db')
     c = conn.cursor()
 
     c.execute("DELETE FROM TempSetup")
@@ -260,7 +260,7 @@ def delete_from_temp_setup():
 
 
 def check_duplicate_setup():
-    conn = sqlite3.connect('sqlite_database.db')
+    conn = sqlite3.connect('../../data/sqlite_database.db')
     c = conn.cursor()
 
     c.execute("""
@@ -278,8 +278,6 @@ def check_duplicate_setup():
 
     return result[0] if result is not None else None
 
-
-print(determine_new_setup_id_from_game_setups())
 
 conn.commit()
 conn.close()
