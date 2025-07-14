@@ -251,10 +251,27 @@ def select_pieces_from_staging_setup(setup_id):
     return result
 
 
-# print(get_all_setup_positions())
+def check_duplicate_setup():
+    conn = sqlite3.connect('sqlite_database.db')
+    c = conn.cursor()
 
-# pieces = select_everything_from_staging_setup(1)
-# print(pieces)
+    c.execute("""
+            SELECT gs.setup_id
+            FROM GameSetups gs
+            JOIN TempSetup ts
+            ON gs.row = ts.row AND gs.col = ts.col AND gs.piece = ts.piece
+            GROUP BY gs.setup_id
+            HAVING COUNT(*) = 40;
+              """)
+    result = c.fetchone()[0]
+
+    conn.commit()
+    conn.close()
+
+    return result
+
+
+print(check_duplicate_setup())
 
 conn.commit()
 conn.close()
