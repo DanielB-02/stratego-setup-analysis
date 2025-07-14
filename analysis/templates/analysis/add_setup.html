@@ -115,6 +115,73 @@
             border-radius: 5px;
             margin-bottom: 20px;
         }
+        
+        .json-editor {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .json-editor h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        
+        .json-editor textarea {
+            width: 100%;
+            height: 150px;
+            font-family: monospace;
+            font-size: 14px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            resize: vertical;
+        }
+        
+        .json-editor .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .json-editor .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        
+        .piece-reference {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        
+        .piece-reference h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+        
+        .json-editor-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .json-editor-layout > div {
+            width: 100%;
+        }
+        
+        .json-editor-layout .image-container {
+            text-align: center;
+        }
+        
+        .json-editor-layout .json-container {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -129,6 +196,55 @@
             {% for message in messages %}
                 <div class="success-message">{{ message }}</div>
             {% endfor %}
+        {% endif %}
+        
+        {% if json_error %}
+            <div class="json-editor">
+                <h3>⚠️ Piece Configuration Error</h3>
+                <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #f5c6cb;">
+                    <strong>Error:</strong> {{ error_message }}
+                </div>
+                <p>Please edit the JSON setup below to fix the piece configuration and resubmit. You can make multiple corrections until all requirements are met:</p>
+                
+                <div class="json-editor-layout">
+                    <div class="image-container">
+                        <h4>Original Setup Image:</h4>
+                        {% if form_data.setup_image_url %}
+                            <div style="border: 2px solid #ddd; border-radius: 8px; padding: 10px; background-color: #f8f9fa; text-align: center;">
+                                <img src="{{ form_data.setup_image_url }}" alt="Original setup" style="max-width: 100%; max-height: 300px; width: auto; height: auto; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <p style="color: #dc3545; font-style: italic; display: none;">Failed to load image. Please try uploading again.</p>
+                            </div>
+                        {% else %}
+                            <p style="color: #666; font-style: italic;">Setup image not available for display</p>
+                        {% endif %}
+                    </div>
+                    <div class="json-container">
+                        <h4>Transcribed JSON:</h4>
+                        <form method="post">
+                            {% csrf_token %}
+                            <textarea name="edited_json" placeholder="Edit the JSON setup here...">{{ transcribed_setup_json }}</textarea>
+                            
+                            <!-- Hidden fields to preserve form data -->
+                            <input type="hidden" name="date_played" value="{{ form_data.date_played }}">
+                            <input type="hidden" name="opponent_name_input" value="{{ form_data.opponent_name_input }}">
+                            <input type="hidden" name="result" value="{{ form_data.result }}">
+                            <input type="hidden" name="moves" value="{{ form_data.moves }}">
+                            <input type="hidden" name="noob_killer" value="{{ form_data.noob_killer }}">
+                            <input type="hidden" name="opponent_id" value="{{ form_data.opponent_id }}">
+                            <input type="hidden" name="opponent_name" value="{{ form_data.opponent_name }}">
+                            <input type="hidden" name="setup_image_url" value="{{ form_data.setup_image_url }}">
+                            
+                            <button type="submit" class="btn btn-warning">Resubmit with Edited JSON</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="piece-reference">
+                    <h4>Stratego Piece Reference:</h4>
+                    <p><strong>Required pieces:</strong> 1×'1', 8×'2', 5×'3', 4×'4', 4×'5', 4×'6', 3×'7', 2×'8', 1×'9', 1×'10', 6×'B' (bombs), 1×'F' (flag)</p>
+                    <p><strong>Total:</strong> 40 pieces arranged in 4 rows of 10 pieces each</p>
+                </div>
+            </div>
         {% endif %}
         
         <form method="post" enctype="multipart/form-data" id="setupForm">
