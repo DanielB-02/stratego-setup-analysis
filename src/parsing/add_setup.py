@@ -1,5 +1,5 @@
 from datetime import datetime
-from src.api.grok_api import transcribe_setup
+# from src.api.grok_api import transcribe_setup
 from src.checks.check_for_opponent import check_for_opponent
 
 
@@ -27,14 +27,14 @@ def user_input():
     print("Path to setup:")
     path = str(input())
 
-    transcribed_setup = transcribe_setup(path)
+    # transcribed_setup = transcribe_setup(path)
 
-    user_input_dict = create_dictionary(date_played, opponent_id, opponent_name, result, moves, noob_killer, transcribed_setup)
+    user_input_dict = create_dictionary(date_played, opponent_id, opponent_name, result, moves, noob_killer)
 
     return user_input_dict
 
 
-def create_dictionary(date_played, opponent_id, opponent_name, result, moves, noob_killer, transcribed_setup):
+def create_dictionary(date_played, opponent_id, opponent_name, result, moves, noob_killer):
     dictionary = {
         "date_played": date_played,
         "opponent_id": opponent_id,
@@ -42,7 +42,7 @@ def create_dictionary(date_played, opponent_id, opponent_name, result, moves, no
         "result": result,
         "moves": moves,
         "noob_killer": noob_killer,
-        "setup": transcribed_setup
+        # "setup": transcribed_setup
     }
 
     return dictionary
