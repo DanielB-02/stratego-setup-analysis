@@ -74,6 +74,20 @@
             display: none;
         }
         
+        .image-preview {
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 400px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
         .btn {
             background-color: #007bff;
             color: white;
@@ -167,6 +181,9 @@
                 </div>
                 {{ form.setup_image }}
                 <div class="file-info" id="fileInfo"></div>
+                <div class="image-preview" id="imagePreview">
+                    <img id="previewImage" src="" alt="Selected image preview">
+                </div>
                 {% if form.setup_image.errors %}
                     <div class="error-message">{{ form.setup_image.errors }}</div>
                 {% endif %}
@@ -180,6 +197,8 @@
         const dragDropArea = document.getElementById('dragDropArea');
         const fileInput = document.getElementById('{{ form.setup_image.id_for_label }}');
         const fileInfo = document.getElementById('fileInfo');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
         
         // Hide the default file input
         fileInput.style.display = 'none';
@@ -219,6 +238,7 @@
         
         function updateFileInfo(file) {
             if (file.type.startsWith('image/')) {
+                // Update file info
                 fileInfo.innerHTML = `
                     <strong>Selected file:</strong> ${file.name}<br>
                     <strong>Size:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB<br>
@@ -226,9 +246,18 @@
                 `;
                 fileInfo.style.display = 'block';
                 dragDropArea.innerHTML = '<p>Image selected: ' + file.name + '</p>';
+                
+                // Show image preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
             } else {
                 alert('Please select an image file.');
                 fileInput.value = '';
+                imagePreview.style.display = 'none';
             }
         }
     </script>
