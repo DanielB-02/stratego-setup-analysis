@@ -163,8 +163,6 @@ def get_all_setup_positions():
     return result
 
 
-
-
 def get_pieces_at_position(row, col):
     conn = sqlite3.connect('sqlite_database.db')
     c = conn.cursor()
@@ -199,17 +197,17 @@ def get_pieces_at_position_for_opponent(opponent, row, col):
     return result
 
 
-def get_highest_setup_id_from_game_setups():
+def determine_new_setup_id_from_game_setups():
     conn = sqlite3.connect('sqlite_database.db')
     c = conn.cursor()
 
     c.execute("SELECT MAX(setup_id) FROM GameSetups")
-    result = c.fetchone()[0]
+    result = c.fetchone()
 
     conn.commit()
     conn.close()
 
-    return result
+    return result[0] + 1 if result is not None else 1
 
 
 def select_opponent_id_and_name(opponent):
@@ -229,7 +227,7 @@ def select_everything_from_staging_setup(setup_id):
     conn = sqlite3.connect('sqlite_database.db')
     c = conn.cursor()
 
-    c.execute("""SELECT * FROM StagingGameSetups WHERE setup_id = ?""", (setup_id,))
+    c.execute("""SELECT * FROM TempSetup WHERE setup_id = ?""", (setup_id,))
     result = c.fetchall()
 
     conn.commit()
@@ -242,13 +240,23 @@ def select_pieces_from_staging_setup(setup_id):
     conn = sqlite3.connect('sqlite_database.db')
     c = conn.cursor()
 
-    c.execute("""SELECT piece FROM StagingGameSetups WHERE setup_id = ?""", (setup_id,))
+    c.execute("""SELECT piece FROM TempSetup WHERE setup_id = ?""", (setup_id,))
     result = [row[0] for row in c.fetchall()]
 
     conn.commit()
     conn.close()
 
     return result
+
+
+def delete_from_temp_setup():
+    conn = sqlite3.connect('sqlite_database.db')
+    c = conn.cursor()
+
+    c.execute("DELETE FROM TempSetup")
+
+    conn.commit()
+    conn.close()
 
 
 def check_duplicate_setup():
@@ -263,15 +271,15 @@ def check_duplicate_setup():
             GROUP BY gs.setup_id
             HAVING COUNT(*) = 40;
               """)
-    result = c.fetchone()[0]
+    result = c.fetchone()
 
     conn.commit()
     conn.close()
 
-    return result
+    return result[0] if result is not None else None
 
 
-print(check_duplicate_setup())
+print(determine_new_setup_id_from_game_setups())
 
 conn.commit()
 conn.close()
