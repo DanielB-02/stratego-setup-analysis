@@ -25,8 +25,8 @@ def encode_image(image_path):
 def transcribe_setup(path):
     # Define image paths
     user_input_image_path = path
-    assistant_1_image_path = "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-08 163819.png"
-    assistant_2_image_path = "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-08 123034.png"
+    assistant_1_image_path = "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-15 120650.png"
+    assistant_2_image_path = "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-15 120950.png"
 
     # Encode images
     user_input_base64_image = encode_image(user_input_image_path)
