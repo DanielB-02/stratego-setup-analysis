@@ -88,6 +88,39 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
+        .image-comparison {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .image-comparison > div {
+            flex: 1;
+            min-width: 300px;
+            text-align: center;
+        }
+        
+        .image-comparison h5 {
+            margin-bottom: 10px;
+            color: #666;
+        }
+        
+        .enhanced-preview {
+            border: 2px solid #28a745 !important;
+            background-color: #f8fff8;
+        }
+        
+        .enhanced-preview::before {
+            content: "Enhanced (Improved Brightness & Contrast)";
+            display: block;
+            font-size: 12px;
+            color: #28a745;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
         .btn {
             background-color: #007bff;
             color: white;
@@ -208,14 +241,29 @@
                 
                 <div class="json-editor-layout">
                     <div class="image-container">
-                        <h4>Original Setup Image:</h4>
-                        {% if form_data.setup_image_url %}
-                            <div style="border: 2px solid #ddd; border-radius: 8px; padding: 10px; background-color: #f8f9fa; text-align: center;">
-                                <img src="{{ form_data.setup_image_url }}" alt="Original setup" style="max-width: 100%; max-height: 300px; width: auto; height: auto; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                <p style="color: #dc3545; font-style: italic; display: none;">Failed to load image. Please try uploading again.</p>
-                            </div>
-                        {% else %}
-                            <p style="color: #666; font-style: italic;">Setup image not available for display</p>
+                        <h4>Setup Images:</h4>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                            {% if form_data.setup_image_url %}
+                                <div style="flex: 1; min-width: 300px;">
+                                    <h5 style="margin-bottom: 10px; color: #666;">Original Image:</h5>
+                                    <div style="border: 2px solid #ddd; border-radius: 8px; padding: 10px; background-color: #f8f9fa; text-align: center;">
+                                        <img src="{{ form_data.setup_image_url }}" alt="Original setup" style="max-width: 100%; max-height: 250px; width: auto; height: auto; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        <p style="color: #dc3545; font-style: italic; display: none;">Failed to load original image.</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% if form_data.enhanced_image_url %}
+                                <div style="flex: 1; min-width: 300px;">
+                                    <h5 style="margin-bottom: 10px; color: #666;">Enhanced Image (Used for OCR):</h5>
+                                    <div style="border: 2px solid #28a745; border-radius: 8px; padding: 10px; background-color: #f8fff8; text-align: center;">
+                                        <img src="{{ form_data.enhanced_image_url }}" alt="Enhanced setup" style="max-width: 100%; max-height: 250px; width: auto; height: auto; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        <p style="color: #dc3545; font-style: italic; display: none;">Failed to load enhanced image.</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% if not form_data.setup_image_url and not form_data.enhanced_image_url %}
+                            <p style="color: #666; font-style: italic;">Setup images not available for display</p>
                         {% endif %}
                     </div>
                     <div class="json-container">
@@ -233,6 +281,7 @@
                             <input type="hidden" name="opponent_id" value="{{ form_data.opponent_id }}">
                             <input type="hidden" name="opponent_name" value="{{ form_data.opponent_name }}">
                             <input type="hidden" name="setup_image_url" value="{{ form_data.setup_image_url }}">
+                            <input type="hidden" name="enhanced_image_url" value="{{ form_data.enhanced_image_url }}">
                             
                             <button type="submit" class="btn btn-warning">Resubmit with Edited JSON</button>
                         </form>
@@ -298,7 +347,19 @@
                 {{ form.setup_image }}
                 <div class="file-info" id="fileInfo"></div>
                 <div class="image-preview" id="imagePreview">
-                    <img id="previewImage" src="" alt="Selected image preview">
+                    <div class="image-comparison">
+                        <div>
+                            <h5>Original Image:</h5>
+                            <img id="previewImage" src="" alt="Original image preview">
+                        </div>
+                        <div>
+                            <h5>Enhanced Preview:</h5>
+                            <div style="border: 2px solid #28a745; border-radius: 8px; padding: 10px; background-color: #f8fff8; position: relative;">
+                                <div style="font-size: 12px; color: #28a745; margin-bottom: 5px; font-weight: bold;">Enhanced (Improved Brightness & Contrast)</div>
+                                <img id="enhancedPreviewImage" src="" alt="Enhanced image preview" style="max-width: 100%; max-height: 300px; border: none; border-radius: 4px;">
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 {% if form.setup_image.errors %}
                     <div class="error-message">{{ form.setup_image.errors }}</div>
@@ -315,6 +376,7 @@
         const fileInfo = document.getElementById('fileInfo');
         const imagePreview = document.getElementById('imagePreview');
         const previewImage = document.getElementById('previewImage');
+        const enhancedPreviewImage = document.getElementById('enhancedPreviewImage');
         
         // Hide the default file input
         fileInput.style.display = 'none';
@@ -366,7 +428,12 @@
                 // Show image preview
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    previewImage.src = e.target.result;
+                    const imageData = e.target.result;
+                    previewImage.src = imageData;
+                    
+                    // Create enhanced preview using canvas
+                    createEnhancedPreview(imageData);
+                    
                     imagePreview.style.display = 'block';
                 };
                 reader.readAsDataURL(file);
@@ -375,6 +442,48 @@
                 fileInput.value = '';
                 imagePreview.style.display = 'none';
             }
+        }
+        
+        function createEnhancedPreview(imageData) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // Draw the image
+                ctx.drawImage(img, 0, 0);
+                
+                // Get image data
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                // Apply brightness and contrast enhancement
+                const brightness = 20; // Increase brightness
+                const contrast = 30; // Increase contrast
+                const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+                
+                for (let i = 0; i < data.length; i += 4) {
+                    // Apply brightness
+                    data[i] = Math.min(255, Math.max(0, data[i] + brightness));     // Red
+                    data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + brightness)); // Green
+                    data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + brightness)); // Blue
+                    
+                    // Apply contrast
+                    data[i] = Math.min(255, Math.max(0, factor * (data[i] - 128) + 128));
+                    data[i + 1] = Math.min(255, Math.max(0, factor * (data[i + 1] - 128) + 128));
+                    data[i + 2] = Math.min(255, Math.max(0, factor * (data[i + 2] - 128) + 128));
+                }
+                
+                // Put enhanced image data back
+                ctx.putImageData(imageData, 0, 0);
+                
+                // Set enhanced preview
+                enhancedPreviewImage.src = canvas.toDataURL('image/jpeg', 0.95);
+            };
+            img.src = imageData;
         }
     </script>
 </body>
