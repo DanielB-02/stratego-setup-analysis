@@ -27,11 +27,13 @@ def transcribe_setup(path):
     user_input_image_path = path
     assistant_1_image_path = "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-15 120650.png"
     assistant_2_image_path = "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-15 120950.png"
+    assistant_3_image_path = "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-15 133647.png"
 
     # Encode images
     user_input_base64_image = encode_image(user_input_image_path)
     assistant_1_base64_image = encode_image(assistant_1_image_path)
     assistant_2_base64_image = encode_image(assistant_2_image_path)
+    assistant_3_base64_image = encode_image(assistant_3_image_path)
 
     # Define the prompt
     prompt = """
@@ -122,6 +124,33 @@ def transcribe_setup(path):
       "4": "['3', '5', '3', '4', '6', '3', 'B', '5', 'B', 'F']"
     }
             """
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": prompt
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/png;base64,{assistant_3_base64_image}",
+                        "detail": "high"
+                    }
+                }
+            ]
+        },
+        {
+            "role": "assistant",
+            "content": """
+        {
+          "1": "['5', '2', '2', '6', '5', '2', '6', '4', '5', '2']"
+          "2": "['8', '6', '9', '3', '7', '2', '10', '2', '8', '2']"
+          "3": "['6', '1', '3', 'B', '4', '4', '7', '3', 'B', '5']"
+          "4": "['7', '4', 'B', 'F', 'B', 'B', '3', 'B', '3', '2']"
+        }
+                """
         },
         {
             "role": "user",

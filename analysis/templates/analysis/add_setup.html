@@ -300,18 +300,18 @@
             {% csrf_token %}
             
             <div class="form-group">
-                <label for="{{ form.date_played.id_for_label }}">Date Played:</label>
-                {{ form.date_played }}
-                {% if form.date_played.errors %}
-                    <div class="error-message">{{ form.date_played.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="form-group">
                 <label for="{{ form.opponent_name.id_for_label }}">Opponent Name:</label>
                 {{ form.opponent_name }}
                 {% if form.opponent_name.errors %}
                     <div class="error-message">{{ form.opponent_name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.date_played.id_for_label }}">Date Played:</label>
+                {{ form.date_played }}
+                {% if form.date_played.errors %}
+                    <div class="error-message">{{ form.date_played.errors }}</div>
                 {% endif %}
             </div>
             
