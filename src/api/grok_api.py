@@ -63,13 +63,23 @@ def transcribe_setup(path):
                 {
                     "type": "text",
                     "text": """
-                    Ensure the transcription is precise and follows the grid structure.
-                    Ignore the color of the background, whether blue or red. It's not a relevant detail for the model. 
-                    Use numbers (1-10) for piece ranks, 'B' for bombs, and 'F' for the flag.
-                    Make sure to double-check your results, as mismatches can happen. 
-                    """
+            Ensure the transcription is precise and follows the grid structure.
+            Use numbers (1-10) for piece ranks, 'B' for bombs, and 'F' for the flag.
+            Make sure to double-check your results, as mismatches can happen. 
+            """
                 }
             ]
+            # "content": [
+            #     {
+            #         "type": "text",
+            #         "text": """
+            #         Ensure the transcription is precise and follows the grid structure.
+            #         Ignore the color of the background, whether blue or red. It's not a relevant detail for the model.
+            #         Use numbers (1-10) for piece ranks, 'B' for bombs, and 'F' for the flag.
+            #         Make sure to double-check your results, as mismatches can happen.
+            #         """
+            #     }
+            # ]
         },
         {
             "role": "user",
