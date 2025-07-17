@@ -18,39 +18,39 @@ if not XAI_API_KEY:
 # Few-shot examples - stored as data structure for efficiency
 FEW_SHOT_EXAMPLES = [
     {
-        "image_path": "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-16 140020.png",
+        "image_path": "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-15 120650.png",
         "output": {
-            "1": "['B', '3', '3', '2', '2', '4', '5', '6', '9', '10']",
-            "2": "['B', 'F', '3', '2', '2', '4', '5', '6', '1', '7']",
-            "3": "['B', 'B', '3', '2', '2', '4', '5', '6', '8', '7']",
-            "4": "['B', 'B', '3', '2', '2', '4', '5', '6', '8', '7']"
+            "1": "['4', 'B', '4', '10', '4', '6', '2', '8', '5', '3']",
+            "2": "['6', '2', '7', '2', '7', '2', '2', '1', '9', '6']",
+            "3": "['8', '2', '5', 'B', '3', 'B', '4', '7', '2', '2']",
+            "4": "['3', '3', 'B', 'F', 'B', 'B', '5', '5', '3', '6']"
         }
     },
     {
-        "image_path": "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-16 140052.png",
+        "image_path": "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-15 120950.png",
         "output": {
-            "1": "['9', '10', 'B', '3', '3', '2', '2', '4', '5', '6']",
-            "2": "['1', '7', 'B', 'F', '3', '2', '2', '4', '5', '6']",
-            "3": "['8', '7', 'B', 'B', '3', '2', '2', '4', '5', '6']",
-            "4": "['8', '7', 'B', 'B', '3', '2', '2', '4', '5', '6']"
+            "1": "['2', '6', '4', '2', '2', '5', '7', '2', '6', '2']",
+            "2": "['8', '2', '4', 'B', '2', '9', '1', '3', '10', '7']",
+            "3": "['5', '2', '7', 'B', '3', '8', 'B', '6', '4', 'B']",
+            "4": "['3', '5', '3', '4', '6', '3', 'B', '5', 'B', 'F']"
         }
     },
     {
-        "image_path": "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-16 140251.png",
+        "image_path": "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-15 151053.png",
         "output": {
-            "1": "['5', '6', '9', '10', 'B', '3', '3', '2', '2', '4']",
-            "2": "['5', '6', '1', '7', 'B', 'F', '3', '2', '2', '4']",
-            "3": "['5', '6', '8', '7', 'B', 'B', '3', '2', '2', '4']",
-            "4": "['5', '6', '8', '7', 'B', 'B', '3', '2', '2', '4']"
+            "1": "['6', '2', '4', '8', '2', '5', '2', '4', '2', 'B']",
+            "2": "['2', '9', '2', '1', '7', '2', '4', '5', '6', '5']",
+            "3": "['4', 'B', 'B', '7', '3', '10', '6', '8', '3', '7']",
+            "4": "['B', 'F', 'B', '3', 'B', '5', '3', '6', '3', '2']"
         }
     },
     {
-        "image_path": "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-16 140324.png",
+        "image_path": "C:/Users/Daniel/Pictures/Screenshots/Screenshot 2025-07-15 150646.png",
         "output": {
-            "1": "['2', '4', '5', '6', '9', '10', 'B', '3', '3', '2']",
-            "2": "['2', '4', '5', '6', '1', '7', 'B', 'F', '3', '2']",
-            "3": "['2', '4', '5', '6', '8', '7', 'B', 'B', '3', '2']",
-            "4": "['2', '4', '5', '6', '8', '7', 'B', 'B', '3', '2']"
+            "1": "['5', '2', '2', '6', '5', '2', '6', '4', '5', '2']",
+            "2": "['8', '6', '9', '3', '7', '2', '10', '2', '8', '2']",
+            "3": "['6', '1', '3', 'B', '4', '4', '7', '3', 'B', '5']",
+            "4": "['7', '4', 'B', 'F', 'B', 'B', '3', 'B', '3', '2']"
         }
     }
 ]
@@ -135,7 +135,7 @@ def transcribe_setup(path, use_few_shot=True, max_examples=4):
     chat = ChatXAI(
         api_key=XAI_API_KEY,
         model="grok-2-vision-1212",
-        temperature=0.2
+        temperature=0.25
     )
 
 
@@ -149,7 +149,18 @@ def transcribe_setup(path, use_few_shot=True, max_examples=4):
                     "text": """
             Ensure the transcription is precise and follows the grid structure.
             Use numbers (1-10) for piece ranks, 'B' for bombs, and 'F' for the flag.
-            Make sure to double-check your results, as mismatches can happen. 
+            Make sure to double-check your results, as mismatches can happen. Here are some examples of mismatches: 
+            - A piece doesnt get detected and the next pieces in the row all get shifted one space to the left. The row is filled out with a hallucinated piece. For example '3', '3', '3', '7', '4', 'B', 'F', 'B' is detected as '3', '3', '7', '4', 'B', 'F', 'B', 'B'.
+            - One piece gets detected wrong when pieces are repeated multiple times in a row. For example ‘2’, ‘2’, ‘2’, ‘2’ is detected as ‘2’, ‘2’, ‘2’, ‘5’.
+            - 2 seen as 4
+            - 4 seen as 2 
+            - 5 seen as 3 (especially on the 5th position of the first row)
+            - 5 seen as 4
+            - 5 seen as 7
+            - 6 seen as 5
+            - 6 seen as 8
+            - B seen as 8
+            - F seen as 8
             """
                 }
             ]
