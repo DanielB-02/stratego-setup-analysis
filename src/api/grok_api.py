@@ -160,6 +160,7 @@ def transcribe_setup(path, use_few_shot=True, max_examples=4):
             - 6 seen as 5
             - 6 seen as 8
             - B seen as 8
+            - B seen as 3
             - F seen as 8
             """
                 }
