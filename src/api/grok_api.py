@@ -135,7 +135,7 @@ def transcribe_setup(path, use_few_shot=True, max_examples=4):
     chat = ChatXAI(
         api_key=XAI_API_KEY,
         model="grok-2-vision-1212",
-        temperature=0.25
+        temperature=0.1
     )
 
 
@@ -153,6 +153,8 @@ def transcribe_setup(path, use_few_shot=True, max_examples=4):
             - A piece doesnt get detected and the next pieces in the row all get shifted one space to the left. The row is filled out with a hallucinated piece. For example '3', '3', '3', '7', '4', 'B', 'F', 'B' is detected as '3', '3', '7', '4', 'B', 'F', 'B', 'B'.
             - One piece gets detected wrong when pieces are repeated multiple times in a row. For example ‘2’, ‘2’, ‘2’, ‘2’ is detected as ‘2’, ‘2’, ‘2’, ‘5’.
             - 2 seen as 4
+            - 2 seen as 6
+            - 3 seen as 5
             - 4 seen as 2 
             - 5 seen as 3 (especially on the 5th position of the first row)
             - 5 seen as 4
