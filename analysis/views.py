@@ -10,12 +10,60 @@ from dotenv import load_dotenv
 from src.api.grok_api import transcribe_setup
 from src.checks.check_for_opponent import check_for_opponent
 from src.database.setup_to_sql import process_game_setup
+from PIL import Image, ImageEnhance
 
 # Load environment variables from .env file
 load_dotenv()
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
+
+def enhance_image_contrast(image_path, brightness_factor=1.2, contrast_factor=1.3):
+    """
+    Enhance the brightness and contrast of an image for better OCR results.
+    
+    Args:
+        image_path: Path to the input image
+        brightness_factor: Factor to increase brightness (1.0 = no change, >1.0 = brighter)
+        contrast_factor: Factor to increase contrast (1.0 = no change, >1.0 = higher contrast)
+    
+    Returns:
+        Tuple of (enhanced_path, enhanced_base64_data_url)
+    """
+    try:
+        # Open the image
+        with Image.open(image_path) as img:
+            # Convert to RGB if necessary
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # Enhance brightness
+            brightness_enhancer = ImageEnhance.Brightness(img)
+            img = brightness_enhancer.enhance(brightness_factor)
+            
+            # Enhance contrast
+            contrast_enhancer = ImageEnhance.Contrast(img)
+            img = contrast_enhancer.enhance(contrast_factor)
+            
+            # Save the enhanced image
+            enhanced_path = image_path.replace('.', '_enhanced.')
+            img.save(enhanced_path, 'JPEG', quality=95)
+            
+            # Create base64 data URL for browser display
+            import base64
+            import io
+            
+            # Convert enhanced image to base64
+            img_buffer = io.BytesIO()
+            img.save(img_buffer, format='JPEG', quality=95)
+            img_buffer.seek(0)
+            enhanced_base64 = base64.b64encode(img_buffer.read()).decode('utf-8')
+            enhanced_data_url = f"data:image/jpeg;base64,{enhanced_base64}"
+            
+            return enhanced_path, enhanced_data_url
+    except Exception as e:
+        print(f"Error enhancing image: {e}")
+        return image_path, None  # Return original path if enhancement fails
 
 
 def hello_world(request):
@@ -67,6 +115,9 @@ def add_setup(request):
                 file_name = default_storage.save(f'temp/{setup_image.name}', ContentFile(setup_image.read()))
                 file_path = default_storage.path(file_name)
                 
+                # Enhance image contrast and brightness for better OCR
+                enhanced_file_path, enhanced_data_url = enhance_image_contrast(file_path)
+                
                 # Convert image to base64 for error display
                 import base64
                 setup_image.seek(0)
@@ -85,8 +136,8 @@ def add_setup(request):
                 if not api_key:
                     raise ValueError("XAI_API_KEY not found in environment variables")
                 
-                # Transcribe the setup from the image
-                transcribed_setup = transcribe_setup(file_path)
+                # Transcribe the setup from the enhanced image
+                transcribed_setup = transcribe_setup(enhanced_file_path)
                 
                 # Create the user input dictionary (similar to original add_setup.py)
                 user_input_dict = {
@@ -99,8 +150,14 @@ def add_setup(request):
                     "setup": transcribed_setup
                 }
                 
-                # Clean up temporary file (keep error file for potential display)
+                # Clean up temporary files (keep error file for potential display)
                 default_storage.delete(file_name)
+                # Also clean up the enhanced image file
+                try:
+                    if enhanced_file_path != file_path and os.path.exists(enhanced_file_path):
+                        os.remove(enhanced_file_path)
+                except:
+                    pass
                 
                 # Process and save to database
                 setup_id = process_game_setup(user_input_dict)
@@ -123,14 +180,17 @@ def add_setup(request):
                     transcribed_setup = locals().get('transcribed_setup', {})
                     transcribed_setup_json = format_setup_json(transcribed_setup)
                     
-                    # Clean up main temp file
+                    # Clean up main temp file and enhanced image
                     try:
                         default_storage.delete(file_name)
+                        if enhanced_file_path != file_path and os.path.exists(enhanced_file_path):
+                            os.remove(enhanced_file_path)
                     except:
                         pass
                     
-                    # Use the pre-saved error image URL
+                    # Use the pre-saved error image URL or enhanced image URL
                     setup_image_url = locals().get('error_image_url', None)
+                    enhanced_image_url = locals().get('enhanced_data_url', None)
                     
                     context = {
                         'form': form,
@@ -147,6 +207,7 @@ def add_setup(request):
                             'opponent_id': opponent_id,
                             'opponent_name': opponent_name,
                             'setup_image_url': setup_image_url,
+                            'enhanced_image_url': enhanced_image_url,
                         }
                     }
                     return render(request, 'analysis/add_setup.html', context)
@@ -228,8 +289,9 @@ def create_json_error_context(request, error_message, json_str):
     except:
         formatted_json = json_str
     
-    # Get image URL from hidden field if available
+    # Get image URLs from hidden fields if available
     setup_image_url = request.POST.get('setup_image_url', None)
+    enhanced_image_url = request.POST.get('enhanced_image_url', None)
     
     return {
         'form': SetupForm(),  # Empty form since we're in error state
@@ -245,20 +307,24 @@ def create_json_error_context(request, error_message, json_str):
             'opponent_id': request.POST.get('opponent_id', ''),
             'opponent_name': request.POST.get('opponent_name', ''),
             'setup_image_url': setup_image_url,
+            'enhanced_image_url': enhanced_image_url,
         }
     }
 
 
 def format_setup_json(setup_dict):
     """Format setup JSON in the compact single-line array format"""
+    import json
     if not setup_dict:
         return "{}"
     
     lines = ["{"]
     for i, (key, value) in enumerate(setup_dict.items()):
-        # Format each row as a single line
+        # Format each row as a single line with proper JSON formatting
         comma = "," if i < len(setup_dict) - 1 else ""
-        line = f"    '{key}': {value}{comma}"
+        # Use json.dumps to properly format the value with double quotes
+        formatted_value = json.dumps(value)
+        line = f'    "{key}": {formatted_value}{comma}'
         lines.append(line)
     lines.append("}")
     

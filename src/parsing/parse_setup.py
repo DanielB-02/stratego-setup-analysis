@@ -3,8 +3,14 @@ import ast
 
 
 def string_to_json(string):
-    json_string = string[8:-4]
-
+    import re
+    
+    # Find JSON content between first { and last }
+    json_match = re.search(r'\{.*\}', string, re.DOTALL)
+    if not json_match:
+        raise ValueError("No JSON object found in response")
+    
+    json_string = json_match.group(0)
     setup = json.loads(json_string)
 
     for key in setup:
