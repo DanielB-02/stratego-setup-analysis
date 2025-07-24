@@ -2,6 +2,7 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
 from typing import List, Tuple, Optional
+from src.database.append_conditions_params import build_conditions_and_params
 import logging
 import os
 
@@ -119,37 +120,26 @@ class StrategoDatabase:
 
     def get_setup_id_with_game_record_filters(self, **kwargs) -> List[Tuple[str]]:
         """Return all setups that satisfy the filters that are applied."""
-        filter_mappings = {
-            "opponent": "opponent_name",
-            "result": "result",
-            "moves": "moves",
-            "noob_killer": "noob_killer",
-            "date": "date_played"
-        }
 
-        conditions = []
-        params = []
-        for key, value in filter_mappings.items():
-            if kwargs.get(key) is not None:
-                conditions.append(f"{value} = ?")
-                params.append(kwargs[key])
+        conditions, params = build_conditions_and_params(kwargs)
 
-        where_clausule = " AND ".join(conditions) if conditions else "1=1 ORDER BY setup_id LIMIT 1"
+        where_clause = " AND ".join(conditions) if conditions else "1=1 ORDER BY setup_id LIMIT 1"
 
-        print(where_clausule)
-
+        print(where_clause)
         print(params)
 
         query = f"""
                 SELECT setup_id
                 FROM GameRecords
-                WHERE {where_clausule}
+                WHERE {where_clause}
             """
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(query, params)
-            return cursor.fetchall()
+            return [result[0] for result in cursor.fetchall()]
+
+
 
 
 db = StrategoDatabase()
@@ -197,8 +187,9 @@ def get_setup_id_with_game_record_filters(**kwargs):
     return db.get_setup_id_with_game_record_filters(**kwargs)
 
 
-date = datetime.strptime("2024-07-22", "%Y-%m-%d").date()
+start_date = datetime.strptime("2024-07-21", "%Y-%m-%d").date()
+end_date = datetime.strptime("2024-07-23", "%Y-%m-%d").date()
 
-setup = get_setup_id_with_game_record_filters(opponent="Goldeneyes")
+setup = get_setup_id_with_game_record_filters(opponent="bruhs")
 
 print(setup)
