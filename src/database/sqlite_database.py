@@ -1,5 +1,6 @@
 import sqlite3
 from contextlib import contextmanager
+from datetime import datetime
 from typing import List, Tuple, Optional
 import logging
 import os
@@ -34,7 +35,7 @@ def get_db_connection():
 
 class StrategoDatabase:
     """Database operations for Stratego game analysis."""
-    
+
     def __init__(self):
         self.db_path = DATABASE_PATH
 
@@ -57,11 +58,13 @@ class StrategoDatabase:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT s.piece 
-                FROM GameSetups s
-                INNER JOIN GameRecords r ON s.setup_id = r.setup_id
-                WHERE r.opponent_name = ? AND s.row = ? AND s.col = ?
-            """, (opponent, row, col))
+                           SELECT s.piece
+                           FROM GameSetups s
+                                    INNER JOIN GameRecords r ON s.setup_id = r.setup_id
+                           WHERE r.opponent_name = ?
+                             AND s.row = ?
+                             AND s.col = ?
+                           """, (opponent, row, col))
             return cursor.fetchall()
 
     def determine_new_setup_id_from_game_setups(self) -> int:
@@ -105,59 +108,97 @@ class StrategoDatabase:
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT gs.setup_id
-                FROM GameSetups gs
-                JOIN TempSetup ts ON gs.row = ts.row AND gs.col = ts.col AND gs.piece = ts.piece
-                GROUP BY gs.setup_id
-                HAVING COUNT(*) = 40
-            """)
+                           SELECT gs.setup_id
+                           FROM GameSetups gs
+                                    JOIN TempSetup ts ON gs.row = ts.row AND gs.col = ts.col AND gs.piece = ts.piece
+                           GROUP BY gs.setup_id
+                           HAVING COUNT(*) = 40
+                           """)
             result = cursor.fetchone()
             return result[0] if result else None
+
+    def get_setup_id_with_game_record_filters(self, **kwargs) -> List[Tuple[str]]:
+        """Return all setups that satisfy the filters that are applied."""
+        filter_mappings = {
+            "opponent": "opponent_name",
+            "result": "result",
+            "moves": "moves",
+            "noob_killer": "noob_killer",
+            "date": "date_played"
+        }
+
+        conditions = []
+        params = []
+        for key, value in filter_mappings.items():
+            if kwargs.get(key) is not None:
+                conditions.append(f"{value} = ?")
+                params.append(kwargs[key])
+
+        where_clausule = " AND ".join(conditions) if conditions else "1=1 ORDER BY setup_id LIMIT 1"
+
+        print(where_clausule)
+
+        print(params)
+
+        query = f"""
+                SELECT setup_id
+                FROM GameRecords
+                WHERE {where_clausule}
+            """
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            return cursor.fetchall()
 
 
 db = StrategoDatabase()
 
+"""Legacy function wrappers for backward compatibility."""
+
 
 def get_all_setup_positions() -> List[Tuple]:
-    """Legacy function wrapper for backward compatibility."""
     return db.get_all_setup_positions()
 
 
 def get_pieces_at_position(row: int, col: int) -> List[Tuple[str]]:
-    """Legacy function wrapper for backward compatibility."""
     return db.get_pieces_at_position(row, col)
 
 
 def get_pieces_at_position_for_opponent(opponent: str, row: int, col: int) -> List[Tuple[str]]:
-    """Legacy function wrapper for backward compatibility."""
     return db.get_pieces_at_position_for_opponent(opponent, row, col)
 
 
 def determine_new_setup_id_from_game_setups() -> int:
-    """Legacy function wrapper for backward compatibility."""
     return db.determine_new_setup_id_from_game_setups()
 
 
 def select_opponent_id_and_name(opponent: str) -> Optional[Tuple]:
-    """Legacy function wrapper for backward compatibility."""
     return db.select_opponent_id_and_name(opponent)
 
 
 def select_everything_from_staging_setup(setup_id: int) -> List[Tuple]:
-    """Legacy function wrapper for backward compatibility."""
     return db.select_everything_from_staging_setup(setup_id)
 
 
 def select_pieces_from_staging_setup(setup_id: int) -> List[str]:
-    """Legacy function wrapper for backward compatibility."""
     return db.select_pieces_from_staging_setup(setup_id)
 
 
 def delete_from_temp_setup() -> None:
-    """Legacy function wrapper for backward compatibility."""
     return db.delete_from_temp_setup()
 
 
 def check_duplicate_setup() -> Optional[int]:
-    """Legacy function wrapper for backward compatibility."""
     return db.check_duplicate_setup()
+
+
+def get_setup_id_with_game_record_filters(**kwargs):
+    return db.get_setup_id_with_game_record_filters(**kwargs)
+
+
+date = datetime.strptime("2024-07-22", "%Y-%m-%d").date()
+
+setup = get_setup_id_with_game_record_filters(opponent="Goldeneyes")
+
+print(setup)
