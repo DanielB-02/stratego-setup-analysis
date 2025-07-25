@@ -125,9 +125,6 @@ class StrategoDatabase:
 
         where_clause = " AND ".join(conditions) if conditions else "1=1 ORDER BY setup_id LIMIT 1"
 
-        print(where_clause)
-        print(params)
-
         query = f"""
                 SELECT setup_id
                 FROM GameRecords
@@ -139,7 +136,20 @@ class StrategoDatabase:
             cursor.execute(query, params)
             return [result[0] for result in cursor.fetchall()]
 
-
+    def get_setups_with_setup_ids(self, setup_ids: List[int]):
+        """Get all setups that have specified ids. Complementary method to get_setup_id_with_game_record_filters."""
+        results = []
+        for setup_id in setup_ids:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                                   SELECT row, col, piece
+                                   FROM GameSetups 
+                                   WHERE setup_id = ?
+                                   """,(setup_id,))
+                result = cursor.fetchall()
+                results.append(result)
+        return results
 
 
 db = StrategoDatabase()
@@ -187,9 +197,6 @@ def get_setup_id_with_game_record_filters(**kwargs):
     return db.get_setup_id_with_game_record_filters(**kwargs)
 
 
-start_date = datetime.strptime("2024-07-21", "%Y-%m-%d").date()
-end_date = datetime.strptime("2024-07-23", "%Y-%m-%d").date()
+def get_setups_with_setup_ids(setup_ids: List[int]) -> Optional[List[int]]:
+    return db.get_setups_with_setup_ids(setup_ids)
 
-setup = get_setup_id_with_game_record_filters(opponent="bruhs")
-
-print(setup)
