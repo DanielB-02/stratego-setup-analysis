@@ -382,9 +382,7 @@ def filter_setups(request):
                 setups = page_obj.object_list
             
             if request.method == 'POST':  # Only show message on new search
-                if total_count > 0:
-                    messages.success(request, f'Found {total_count} setups matching your filters.')
-                else:
+                if total_count == 0:
                     messages.info(request, 'No setups found matching your filters.')
                     
         except Exception as e:
