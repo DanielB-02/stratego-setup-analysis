@@ -123,12 +123,13 @@ class StrategoDatabase:
 
         conditions, params = build_conditions_and_params(kwargs)
 
-        where_clause = " AND ".join(conditions) if conditions else "1=1 ORDER BY setup_id LIMIT 1"
+        where_clause = " AND ".join(conditions) if conditions else "1=1"
 
         query = f"""
                 SELECT setup_id
                 FROM GameRecords
                 WHERE {where_clause}
+                ORDER BY setup_id DESC
             """
 
         with get_db_connection() as conn:
