@@ -3,13 +3,15 @@ from django.http import HttpResponse
 from django.contrib import messages
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from .forms import SetupForm
+from django.core.paginator import Paginator
+from .forms import SetupForm, FilterForm
 import os
 import sys
 from dotenv import load_dotenv
 from src.api.grok_api import transcribe_setup
 from src.checks.check_for_opponent import check_for_opponent
 from src.database.setup_to_sql import process_game_setup
+from src.database.sqlite_database import get_setup_id_with_game_record_filters, get_setups_with_setup_ids
 from PIL import Image, ImageEnhance
 
 # Load environment variables from .env file
@@ -83,11 +85,13 @@ def hello_world(request):
         <div class="nav">
             <a href="/">Home</a>
             <a href="/add-setup/">Add Setup</a>
+            <a href="/filter-setups/">Filter Setups</a>
         </div>
         <h1>Welcome to Stratego Setup Analysis</h1>
         <p>This application helps you analyze and track your Stratego game setups.</p>
         <ul>
             <li><a href="/add-setup/">Add a new setup</a> - Upload an image and add game details</li>
+            <li><a href="/filter-setups/">Filter setups</a> - Filter and view existing setups</li>
         </ul>
     </body>
     </html>
@@ -329,3 +333,114 @@ def format_setup_json(setup_dict):
     lines.append("}")
     
     return "\n".join(lines)
+
+
+def filter_setups(request):
+    """View for filtering and displaying setups."""
+
+    form = FilterForm()
+    setups = []
+    total_count = 0
+    page_obj = None
+    filter_params = {}
+    
+    # Check if we have filter data from either POST or session
+    if request.method == 'POST':
+        form = FilterForm(request.POST)
+        if form.is_valid():
+            # Store filter params in session for pagination
+            filter_params = build_filter_params(form)
+            request.session['filter_params'] = filter_params
+    elif 'filter_params' in request.session:
+        # Use stored filter params for pagination
+        filter_params = request.session['filter_params']
+        form = FilterForm(initial=filter_params)
+    
+    if filter_params:
+        try:
+            # Get setup IDs that match the filters
+            setup_ids = get_setup_id_with_game_record_filters(**filter_params)
+            total_count = len(setup_ids)
+            
+            if setup_ids:
+                # Get the actual setup data
+                setup_data = get_setups_with_setup_ids(setup_ids)
+                
+                # Convert setup data to 4x10 grids
+                all_setups = []
+                for i, setup in enumerate(setup_data):
+                    grid = convert_setup_to_grid(setup)
+                    all_setups.append({
+                        'setup_id': setup_ids[i],
+                        'grid': grid
+                    })
+                
+                # Implement pagination (10 setups per page)
+                paginator = Paginator(all_setups, 10)
+                page_number = request.GET.get('page', 1)
+                page_obj = paginator.get_page(page_number)
+                setups = page_obj.object_list
+            
+            if request.method == 'POST':  # Only show message on new search
+                if total_count > 0:
+                    messages.success(request, f'Found {total_count} setups matching your filters.')
+                else:
+                    messages.info(request, 'No setups found matching your filters.')
+                    
+        except Exception as e:
+            messages.error(request, f'Error retrieving setups: {str(e)}')
+    
+    context = {
+        'form': form,
+        'setups': setups,
+        'total_count': total_count,
+        'page_obj': page_obj
+    }
+    
+    return render(request, 'analysis/filter_setups.html', context)
+
+
+def build_filter_params(form):
+    """Build filter parameters from form data."""
+    filter_params = {}
+    
+    # Get form data and only add non-empty values
+    opponent = form.cleaned_data.get('opponent')
+    if opponent:
+        filter_params['opponent'] = opponent
+        
+    result = form.cleaned_data.get('result')
+    if result:
+        filter_params['result'] = result
+        
+    noob_killer = form.cleaned_data.get('noob_killer')
+    if noob_killer:
+        filter_params['noob_killer'] = int(noob_killer)
+        
+    min_moves = form.cleaned_data.get('min_moves')
+    max_moves = form.cleaned_data.get('max_moves')
+    if min_moves and max_moves:
+        filter_params['min_moves'] = min_moves
+        filter_params['max_moves'] = max_moves
+        
+    start_date = form.cleaned_data.get('start_date')
+    end_date = form.cleaned_data.get('end_date')
+    if start_date and end_date:
+        filter_params['start_date'] = start_date.strftime('%Y-%m-%d')
+        filter_params['end_date'] = end_date.strftime('%Y-%m-%d')
+    
+    return filter_params
+
+
+def convert_setup_to_grid(setup_data):
+    """Convert setup data from database to 4x10 grid format."""
+    # Initialize 4x10 grid with empty spaces
+    grid = [['.' for _ in range(10)] for _ in range(4)]
+    
+    # Fill the grid with pieces from setup_data
+    # Database uses 1-based indexing, so convert to 0-based
+    for row, col, piece in setup_data:
+        if 1 <= row <= 4 and 1 <= col <= 10:
+            grid[row-1][col-1] = piece
+    
+    return grid
