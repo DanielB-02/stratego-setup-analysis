@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse Setups - Stratego Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        
+        .nav a:hover {
+            text-decoration: underline;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .filter-row {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 220px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .controls-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .piece-selector {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .piece-selector label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .piece-dropdown {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: white;
+        }
+        
+        .heatmap-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .heatmap-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .heatmap-grid {
+            display: inline-block;
+            background-color: #000;
+            padding: 3px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .heatmap-row {
+            display: flex;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .heatmap-cell {
+            width: 50px;
+            height: 50px;
+            margin: 1px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #000;
+            border: 1px solid #333;
+            transition: all 0.3s ease;
+        }
+        
+        .heatmap-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        
+        .legend {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .legend-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .legend-scale {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            border: 1px solid #333;
+        }
+        
+        .coordinates {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .coord-labels {
+            display: inline-block;
+            margin: 10px 0;
+        }
+        
+        .coord-row {
+            display: flex;
+            justify-content: center;
+            gap: 1px;
+            margin-bottom: 5px;
+        }
+        
+        .coord-cell {
+            width: 52px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .row-labels {
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: top;
+        }
+        
+        .row-label {
+            height: 52px;
+            width: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="/">Home</a>
+            <a href="/add-setup/">Add Setup</a>
+            <a href="/filter-setups/">Filter Setups</a>
+            <a href="/analyse-setups/">Analyse Setups</a>
+        </div>
+        
+        <h1>Setup Analysis - Piece Heatmaps</h1>
+        
+        <div id="loading" class="loading">
+            Loading heatmap data...
+        </div>
+        
+        <div id="error" class="error" style="display: none;">
+            Error loading heatmap data. Please try again.
+        </div>
+        
+        <div id="content" style="display: none;">
+            <div class="filter-section">
+                <h3>Filter Setups</h3>
+                <form id="filterForm">
+                    {% csrf_token %}
+                    
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="{{ form.opponent.id_for_label }}">Opponent:</label>
+                            {{ form.opponent }}
+                        </div>
+                        <div class="filter-group">
+                            <label for="{{ form.result.id_for_label }}">Result:</label>
+                            {{ form.result }}
+                        </div>
+                        <div class="filter-group">
+                            <label for="{{ form.noob_killer.id_for_label }}">Noob Killer:</label>
+                            {{ form.noob_killer }}
+                        </div>
+                    </div>
+                    
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="{{ form.min_moves.id_for_label }}">Min Moves:</label>
+                            {{ form.min_moves }}
+                        </div>
+                        <div class="filter-group">
+                            <label for="{{ form.max_moves.id_for_label }}">Max Moves:</label>
+                            {{ form.max_moves }}
+                        </div>
+                    </div>
+                    
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="{{ form.start_date.id_for_label }}">Start Date:</label>
+                            {{ form.start_date }}
+                        </div>
+                        <div class="filter-group">
+                            <label for="{{ form.end_date.id_for_label }}">End Date:</label>
+                            {{ form.end_date }}
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn" onclick="applyFilters()">Apply Filters</button>
+                </form>
+            </div>
+            
+            <div class="controls-section">
+                <div class="piece-selector">
+                    <label for="pieceDropdown">Select Piece:</label>
+                    <select id="pieceDropdown" class="piece-dropdown" onchange="selectPiece(this.value)">
+                        <option value="10">Marshal (10)</option>
+                        <option value="9">General (9)</option>
+                        <option value="8">Colonel (8)</option>
+                        <option value="7">Major (7)</option>
+                        <option value="6">Captain (6)</option>
+                        <option value="5">Lieutenant (5)</option>
+                        <option value="4">Sergeant (4)</option>
+                        <option value="3">Miner (3)</option>
+                        <option value="2">Scout (2)</option>
+                        <option value="1">Spy (1)</option>
+                        <option value="F">Flag (F)</option>
+                        <option value="B">Bomb (B)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="heatmap-container">
+                <div class="heatmap-title" id="heatmapTitle">Select a piece to view its heatmap</div>
+                
+                <div class="coordinates">
+                    <div class="coord-labels">
+                        <div class="coord-row">
+                            <div class="coord-cell"></div>
+                            <div class="coord-cell">1</div>
+                            <div class="coord-cell">2</div>
+                            <div class="coord-cell">3</div>
+                            <div class="coord-cell">4</div>
+                            <div class="coord-cell">5</div>
+                            <div class="coord-cell">6</div>
+                            <div class="coord-cell">7</div>
+                            <div class="coord-cell">8</div>
+                            <div class="coord-cell">9</div>
+                            <div class="coord-cell">10</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: center; align-items: flex-start;">
+                    <div class="row-labels">
+                        <div class="row-label">1</div>
+                        <div class="row-label">2</div>
+                        <div class="row-label">3</div>
+                        <div class="row-label">4</div>
+                    </div>
+                    
+                    <div class="heatmap-grid" id="heatmapGrid">
+                        <!-- Grid will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-title">Intensity Scale (%)</div>
+                    <div class="legend-scale">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #ffffff;"></div>
+                            <span>0%</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #ffcccc;"></div>
+                            <span>Low</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #ff6666;"></div>
+                            <span>Medium</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #ff0000;"></div>
+                            <span>High</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #990000;"></div>
+                            <span>Very High</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let heatmapData = {};
+        const pieces = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'F', 'B'];
+        let currentPiece = '10';
+        let currentFilters = {};
+
+        async function loadHeatmapData(filters = {}) {
+            try {
+                // Build query string from filters
+                const queryParams = new URLSearchParams(filters);
+                const url = `/analyse-setups/?${queryParams.toString()}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load data');
+                }
+                
+                const data = await response.json();
+                heatmapData = data.heatmap_data;
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+                showHeatmap(currentPiece);
+                
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                console.error('Error loading heatmap data:', error);
+            }
+        }
+
+        function applyFilters() {
+            // Collect filter values from form
+            const filters = {};
+            
+            const opponent = document.getElementById('id_opponent').value.trim();
+            if (opponent) filters.opponent = opponent;
+            
+            const result = document.getElementById('id_result').value;
+            if (result) filters.result = result;
+            
+            const noobKiller = document.getElementById('id_noob_killer').value;
+            if (noobKiller) filters.noob_killer = noobKiller;
+            
+            const minMoves = document.getElementById('id_min_moves').value;
+            const maxMoves = document.getElementById('id_max_moves').value;
+            if (minMoves && maxMoves) {
+                filters.min_moves = minMoves;
+                filters.max_moves = maxMoves;
+            }
+            
+            const startDate = document.getElementById('id_start_date').value;
+            const endDate = document.getElementById('id_end_date').value;
+            if (startDate && endDate) {
+                filters.start_date = startDate;
+                filters.end_date = endDate;
+            }
+            
+            currentFilters = filters;
+            
+            // Show loading and reload data
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            
+            loadHeatmapData(filters);
+        }
+
+        function selectPiece(piece) {
+            currentPiece = piece;
+            
+            // Update dropdown selection
+            document.getElementById('pieceDropdown').value = piece;
+            
+            showHeatmap(piece);
+        }
+
+        function showHeatmap(piece) {
+            const title = document.getElementById('heatmapTitle');
+            const grid = document.getElementById('heatmapGrid');
+            
+            title.textContent = `Piece ${piece} Placement Heatmap`;
+            
+            const pieceData = heatmapData[piece] || [];
+            
+            // Calculate max value for scaling
+            let maxValue = 0;
+            for (let row of pieceData) {
+                for (let value of row) {
+                    maxValue = Math.max(maxValue, value);
+                }
+            }
+            
+            // Create grid HTML
+            let gridHTML = '';
+            for (let row = 0; row < 4; row++) {
+                gridHTML += '<div class="heatmap-row">';
+                for (let col = 0; col < 10; col++) {
+                    const value = pieceData[row] ? pieceData[row][col] || 0 : 0;
+                    const intensity = maxValue > 0 ? value / maxValue : 0;
+                    const color = getHeatmapColor(intensity);
+                    
+                    gridHTML += `
+                        <div class="heatmap-cell" 
+                             style="background-color: ${color};" 
+                             title="Row ${row + 1}, Col ${col + 1}: ${value.toFixed(2)}%">
+                            ${value.toFixed(1)}
+                        </div>
+                    `;
+                }
+                gridHTML += '</div>';
+            }
+            
+            grid.innerHTML = gridHTML;
+        }
+
+        function getHeatmapColor(intensity) {
+            // Create a color scale from white to dark red
+            const red = Math.round(255);
+            const green = Math.round(255 * (1 - intensity));
+            const blue = Math.round(255 * (1 - intensity));
+            
+            return `rgb(${red}, ${green}, ${blue})`;
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHeatmapData();
+        });
+    </script>
+</body>
+</html>

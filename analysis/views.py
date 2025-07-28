@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from src.api.grok_api import transcribe_setup
 from src.checks.check_for_opponent import check_for_opponent
 from src.database.setup_to_sql import process_game_setup
-from src.database.sqlite_database import get_setup_id_with_game_record_filters, get_setups_with_setup_ids
+from src.database.sqlite_database import get_setup_id_with_game_record_filters, get_setups_with_setup_ids, get_piece_counts_for_all_positions
 from PIL import Image, ImageEnhance
 
 # Load environment variables from .env file
@@ -86,12 +86,14 @@ def hello_world(request):
             <a href="/">Home</a>
             <a href="/add-setup/">Add Setup</a>
             <a href="/filter-setups/">Filter Setups</a>
+            <a href="/analyse-setups/">Analyse Setups</a>
         </div>
         <h1>Welcome to Stratego Setup Analysis</h1>
         <p>This application helps you analyze and track your Stratego game setups.</p>
         <ul>
             <li><a href="/add-setup/">Add a new setup</a> - Upload an image and add game details</li>
             <li><a href="/filter-setups/">Filter setups</a> - Filter and view existing setups</li>
+            <li><a href="/analyse-setups/">Analyse setups</a> - View heatmaps showing piece placement patterns</li>
         </ul>
     </body>
     </html>
@@ -442,3 +444,65 @@ def convert_setup_to_grid(setup_data):
             grid[row-1][col-1] = piece
     
     return grid
+
+
+def analyse_setups(request):
+    """View for analyzing setups with heatmaps for all pieces."""
+    
+    # Handle AJAX request for heatmap data
+    if request.method == 'GET' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            # Get filter parameters from GET request
+            filter_params = {}
+            
+            opponent = request.GET.get('opponent', '').strip()
+            if opponent:
+                filter_params['opponent'] = opponent
+                
+            result = request.GET.get('result', '').strip()
+            if result:
+                filter_params['result'] = result
+                
+            noob_killer = request.GET.get('noob_killer', '').strip()
+            if noob_killer:
+                filter_params['noob_killer'] = int(noob_killer)
+                
+            min_moves = request.GET.get('min_moves', '').strip()
+            max_moves = request.GET.get('max_moves', '').strip()
+            if min_moves and max_moves:
+                filter_params['min_moves'] = int(min_moves)
+                filter_params['max_moves'] = int(max_moves)
+                
+            start_date = request.GET.get('start_date', '').strip()
+            end_date = request.GET.get('end_date', '').strip()
+            if start_date and end_date:
+                filter_params['start_date'] = start_date
+                filter_params['end_date'] = end_date
+            
+            # Get filtered piece data
+            piece_data = get_piece_counts_for_all_positions(**filter_params)
+            
+            # Process the data to organize by piece type
+            heatmap_data = {}
+            
+            # Initialize all pieces with empty 4x10 grids
+            pieces = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'F', 'B']
+            for piece in pieces:
+                heatmap_data[piece] = [[0 for _ in range(10)] for _ in range(4)]
+            
+            # Fill the heatmap data
+            for row, col, piece, percentage in piece_data:
+                if piece in pieces and 1 <= row <= 4 and 1 <= col <= 10:
+                    heatmap_data[piece][row-1][col-1] = round(percentage, 2)
+            
+            return JsonResponse({'heatmap_data': heatmap_data})
+            
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    # Regular page request
+    form = FilterForm()
+    context = {
+        'form': form
+    }
+    return render(request, 'analysis/analyse_setups.html', context)
