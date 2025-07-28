@@ -152,6 +152,41 @@ class StrategoDatabase:
                 results.append(result)
         return results
 
+    def get_piece_counts_for_all_positions(self, **kwargs):
+        conditions, params = build_conditions_and_params(kwargs)
+        
+        if conditions:
+            # Build the filtered query - need to duplicate params for both WHERE clauses
+            where_clause = " AND ".join(conditions)
+            query = f"""
+                SELECT gs.row, gs.col, gs.piece,
+                       COUNT(*) * 100.0 / (
+                           SELECT COUNT(DISTINCT gr.setup_id) 
+                           FROM GameRecords gr 
+                           WHERE {where_clause}
+                       ) AS piece_percentage
+                FROM GameSetups gs
+                INNER JOIN GameRecords gr ON gs.setup_id = gr.setup_id
+                WHERE {where_clause}
+                GROUP BY gs.row, gs.col, gs.piece
+            """
+            # Duplicate params for both WHERE clauses (subquery and main query)
+            all_params = params + params
+        else:
+            # Original query without filters
+            query = """
+                SELECT row, col, piece,
+                       COUNT(*) * 100.0 / (SELECT COUNT(DISTINCT setup_id) FROM GameSetups) AS piece_percentage
+                FROM GameSetups
+                GROUP BY row, col, piece
+            """
+            all_params = []
+        
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, all_params)
+            return cursor.fetchall()
+
 
 db = StrategoDatabase()
 
@@ -201,3 +236,6 @@ def get_setup_id_with_game_record_filters(**kwargs):
 def get_setups_with_setup_ids(setup_ids: List[int]) -> Optional[List[int]]:
     return db.get_setups_with_setup_ids(setup_ids)
 
+
+def get_piece_counts_for_all_positions(**kwargs) -> List[int]:
+    return db.get_piece_counts_for_all_positions(**kwargs)
